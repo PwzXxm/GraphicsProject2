@@ -174,6 +174,8 @@ public class PlayerController : MonoBehaviour
                 rb.isKinematic = true;
                 rb.useGravity = false;
             }
+
+
         }
 
 
@@ -253,7 +255,7 @@ public class PlayerController : MonoBehaviour
     /* Rolling the player */
     IEnumerator Roll(Vector3 pos, Vector3 ax, float angle, float speed)
     {
-        int steps = Mathf.CeilToInt(speed * 30.0f);
+        int steps = Mathf.CeilToInt(speed * 25.0f);
         float eachAngle = angle / steps;
 
         for (int i = 0; i < steps; i++)
@@ -277,5 +279,10 @@ public class PlayerController : MonoBehaviour
 
         point.position = transform.position;
         isMoving = false;
+    }
+
+    public bool isPlayerLyingDown()
+    {
+        return this.isLyingDown;
     }
 }
