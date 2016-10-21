@@ -2,6 +2,7 @@
 using System.Collections;
 using System.Collections.Generic;
 using System.IO;
+using UnityEngine.SceneManagement;
 
 public class LevelGenerator : MonoBehaviour
 {
@@ -13,6 +14,7 @@ public class LevelGenerator : MonoBehaviour
 
     private GameObject curPlayer;
     private int level = 1;
+    private int maxLevel;
     private Dictionary<int, List<Vector3>> levelmap;
     private Dictionary<int, Vector3[]> StartingEndingPoints;
     private List<GameObject> curObj;
@@ -20,11 +22,10 @@ public class LevelGenerator : MonoBehaviour
     // Use this for initialization
     void Start()
     {
-        levelmap = new Dictionary<int, List<Vector3>>();
-        StartingEndingPoints = new Dictionary<int, Vector3[]>();
         curObj = new List<GameObject>();
-        loadData("Assets/Data/leveldata.txt");
+        loadData();
 
+        maxLevel = levelmap.Count;
         level = Startinglevel;
         loadLevel(level);
     }
@@ -39,10 +40,15 @@ public class LevelGenerator : MonoBehaviour
                 Destroy(this.curPlayer);
                 CreatePlayer();
             }
+
             Vector3 endPos = StartingEndingPoints[level][1];
             PlayerController pc = curPlayer.gameObject.GetComponent<PlayerController>();
-            if (curPlayer.transform.position.Equals(new Vector3(endPos.x, endPos.y + 1.5f, endPos.z)) && !pc.isPlayerLyingDown()) {
-                curPlayer.transform.position = new Vector3(endPos.x, endPos.y + 5.0f, endPos.z);
+            if (curPlayer.transform.position.Equals(new Vector3(endPos.x, endPos.y + 1.5f, endPos.z)) && !pc.isPlayerLyingDown())
+            {
+                if (level == maxLevel)
+                    SceneManager.LoadScene("Ending");
+
+                curPlayer.transform.position = new Vector3(endPos.x, endPos.y + 2.5f, endPos.z);
                 StartCoroutine(nextLevel());
             }
         }
@@ -60,11 +66,22 @@ public class LevelGenerator : MonoBehaviour
         }
         curObj.Clear();
 
-        level++;
+        if (GameObject.FindWithTag("playerTag"))
+        {
+            Destroy(curPlayer);
+        }
+
+        if (level < maxLevel)
+        {
+            level++;
+        }
+
+        yield return new WaitForSeconds(0.6f);
+
+        loadLevel(level);
 
         fadingTime = GameObject.Find("Fading").GetComponent<FadingControl>().BeginFade(-1);
         yield return new WaitForSeconds(fadingTime);
-        loadLevel(level);
     }
 
     void CreatePlayer()
@@ -90,61 +107,60 @@ public class LevelGenerator : MonoBehaviour
         curObj.Add(endCube);
 
         CreatePlayer();
-        curObj.Add(curPlayer);
     }
 
 
-    /* trying to load data from file but this cause having error while building
-    */
-    private void loadData(string filename)
+    private void loadData()
     {
-        string line;
-        Vector3 v;
-        try
+        levelmap = new Dictionary<int, List<Vector3>>()
         {
-            for (StreamReader reader = new StreamReader(filename); ;)
-            {
-                line = reader.ReadLine();
-                if (line == null) break;
-                string[] str = line.Split(',');
-                if (str.Length == 1)
-                {
-                    level = int.Parse(str[0]);
-                    levelmap.Add(level, new List<Vector3>());
-                    StartingEndingPoints.Add(level, new Vector3[2]);
-                }
-                else if (str.Length == 3)
-                {
-                    v = new Vector3(float.Parse(str[0]), float.Parse(str[1]), float.Parse(str[2]));
-                    levelmap[level].Add(v);
-                }
-                else if (str.Length == 4)
-                {
-                    if (str[0].Equals("S"))
-                    {
-                        v = new Vector3(float.Parse(str[1]), float.Parse(str[2]), float.Parse(str[3]));
-                        StartingEndingPoints[level][0] = v;
-                    }
-                    else if (str[0].Equals("E"))
-                    {
-                        v = new Vector3(float.Parse(str[1]), float.Parse(str[2]), float.Parse(str[3]));
-                        StartingEndingPoints[level][1] = v;
-                    }
-                    else
-                    {
-                        throw new IOException("loading Starting/Ending points fails\n");
-                    }
-                }
-                else
-                {
-                    throw new IOException("loading file fails\n");
-                }
+            {1, new List<Vector3>() {
+                new Vector3(-3,0,-1),
+                new Vector3(-2,0,-1),
+                new Vector3(-1,0,-1),
+                new Vector3(0,0,-1),
+                new Vector3(0,0,0),
+                new Vector3(0,0,1),
+                new Vector3(0,0,2),
+                new Vector3(1,0,2),
+                new Vector3(2,0,2)
             }
-        }
-        catch (IOException e)
+            },
+            {2, new List<Vector3>() {
+                new Vector3(0,0,0),
+                new Vector3(-1,0,0),
+                new Vector3(-1,0,1),
+                new Vector3(-1,0,2),
+                new Vector3(-2,0,1),
+                new Vector3(-2,0,2),
+                new Vector3(-3,0,1),
+                new Vector3(-3,0,2),
+                new Vector3(-4,0,1),
+                new Vector3(-4,0,2),
+                new Vector3(1,0,0),
+                new Vector3(2,0,0),
+                new Vector3(2,0,-1),
+                new Vector3(2,0,-2),
+                new Vector3(3,0,0),
+                new Vector3(3,0,-1),
+                new Vector3(3,0,-2)
+            }
+            }
+        };
+        StartingEndingPoints = new Dictionary<int, Vector3[]>()
         {
-            Debug.Log(e.Message);
-        }
+            {1, new Vector3[2]
+            {
+                new Vector3(-3,1.5f, -1),
+                new Vector3(3,0,2)
+            }
+            },
+            {2, new Vector3[2]
+            {
+                new Vector3(0,1.5f,0),
+                new Vector3(-4,0,0)
+            } }
+        };
     }
 
     public int getCurrentLevel()

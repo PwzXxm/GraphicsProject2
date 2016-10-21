@@ -10,6 +10,9 @@ public class PlayerController : MonoBehaviour
     private bool isMoving;
     private bool[] lyingChk;        // front, back, left, right
     private Rigidbody rb;
+    private string outStr;
+    private Vector2 startPos;
+    private Vector2 swipeDir;
 
     void Start()
     {
@@ -88,18 +91,11 @@ public class PlayerController : MonoBehaviour
                 isLyingLeftRight = false;
             }
 
-            /*
-            Debug.DrawRay(front.origin, front.direction, Color.blue);
-            Debug.DrawRay(back.origin, back.direction, Color.blue);
-            Debug.DrawRay(left.origin, left.direction, Color.blue);
-            Debug.DrawRay(right.origin, right.direction, Color.blue);
-            */
         }
 
         /* check boundary condition */
         bottomPos = transform.position - Vector3.up * 0.25f;
         bool outOfBounds = true;
-        //Debug.Log(isLyingDown + " " + isLyingLeftRight);
         if (!isMoving)
         {
             if (isLyingDown)
@@ -145,8 +141,6 @@ public class PlayerController : MonoBehaviour
                             rb.AddForceAtPosition(Vector3.down, ray1.origin, ForceMode.Impulse);
                     }
                 }
-                //Debug.DrawRay(ray1.origin, ray1.direction, Color.red);
-                //Debug.DrawRay(ray2.origin, ray2.direction, Color.red);
             }
             else
             {
@@ -161,9 +155,7 @@ public class PlayerController : MonoBehaviour
                 {
                     rb.AddForce(Vector3.down);
                 }
-                //Debug.DrawRay(ray1.origin, ray1.direction, Color.red);
             }
-            //Debug.Log(outOfBounds + " " + isMoving);
             if (outOfBounds)
             {
                 rb.isKinematic = false;
@@ -179,9 +171,49 @@ public class PlayerController : MonoBehaviour
         }
 
 
-        float x = 0.0f, y = 0.0f, z = 0.0f;
+        /* Swipe Detection - learn from unity api documentation*/
+        bool swipeLeft = false;
+        bool swipeRight = false;
+        bool swipeUp = false;
+        bool swipeDown = false;
+        if (Input.touchCount > 0)
+        {
+            Touch touch = Input.GetTouch(0);
+            bool directionChosen = false;
+            switch(touch.phase)
+            {
+                case TouchPhase.Began:
+                    startPos = touch.position;
+                    directionChosen = false;
+                    break;
+                case TouchPhase.Moved:
+                    swipeDir = touch.position - startPos;
+                    break;
+                case TouchPhase.Ended:
+                    directionChosen = true;
+                    break;
+            }
 
-        if (Input.GetKeyDown("left") && !isMoving && !outOfBounds)
+
+            if (directionChosen)
+            {
+                // check which moves more - horizontal/vertical
+                if (Mathf.Abs(swipeDir.x) > Mathf.Abs(swipeDir.y))
+                {
+                    if (swipeDir.x < 0) swipeLeft = true;
+                    else swipeRight = true;
+                } else
+                {
+                    if (swipeDir.y < 0) swipeDown = true;
+                    else swipeUp = true;
+                }
+            }
+        }
+
+
+        /* Movement */
+        float x = 0.0f, y = 0.0f, z = 0.0f;
+        if ((Input.GetKeyDown("left") || swipeLeft) && !isMoving && !outOfBounds)
         {
             if (isLyingDown)
             {
@@ -193,15 +225,11 @@ public class PlayerController : MonoBehaviour
                 x = -0.5f;
                 y = -1.0f;
             }
-            //Debug.Log(isLyingDown + " " + isLyingLeftRight);
-            //Debug.Log(point.position);
-            //Debug.Log(x + " " + y + " " + z);
             point.Translate(x, y, z, Space.World);
-            //Debug.Log(point.position);
             StartCoroutine(Roll(point.position, Vector3.forward, 90.0f, speed));
             isMoving = true;
         }
-        else if (Input.GetKeyDown("right") && !isMoving && !outOfBounds)
+        else if ((Input.GetKeyDown("right") || swipeRight) && !isMoving && !outOfBounds)
         {
             if (isLyingDown)
             {
@@ -217,7 +245,7 @@ public class PlayerController : MonoBehaviour
             StartCoroutine(Roll(point.position, -Vector3.forward, 90.0f, speed));
             isMoving = true;
         }
-        else if (Input.GetKeyDown("up") && !isMoving && !outOfBounds)
+        else if ((Input.GetKeyDown("up") || swipeUp) && !isMoving && !outOfBounds)
         {
             if (isLyingDown)
             {
@@ -233,7 +261,7 @@ public class PlayerController : MonoBehaviour
             StartCoroutine(Roll(point.position, Vector3.right, 90.0f, speed));
             isMoving = true;
         }
-        else if (Input.GetKeyDown("down") && !isMoving && !outOfBounds)
+        else if ((Input.GetKeyDown("down") || swipeDown) && !isMoving && !outOfBounds)
         {
             if (isLyingDown)
             {
@@ -249,7 +277,6 @@ public class PlayerController : MonoBehaviour
             StartCoroutine(Roll(point.position, -Vector3.right, 90.0f, speed));
             isMoving = true;
         }
-
     }
 
     /* Rolling the player */

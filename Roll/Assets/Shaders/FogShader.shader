@@ -17,6 +17,7 @@
 
 			#pragma vertex vert
 			#pragma fragment frag
+			#pragma multi_compile_fwdbase
 
 			#include "AutoLight.cginc"
 			#include "UnityCG.cginc"
