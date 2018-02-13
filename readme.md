@@ -8,7 +8,8 @@ This game is a puzzle game. The goal of the game is to make a 2x1 cuboid stand o
 
 The player only can roll the cuboid to move and will restart the level if the cuboid fails to stand/lie on the base cubes.
 
-
+### Gameplay
+Link: https://youtu.be/pcggNpw43Ag
 
 ### Controls
 To start the game, when the game is loaded, press `Start Game`.
